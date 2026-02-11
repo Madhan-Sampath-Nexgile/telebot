@@ -38,6 +38,17 @@ interface ChatMessage {
   at: string;
 }
 
+interface ChatApiResponse {
+  ok: boolean;
+  reply?: string;
+}
+
+interface AnimalCategory {
+  key: string;
+  aliases: string[];
+  test: (animal: AnimalProfile) => boolean;
+}
+
 const HISTORY_STORAGE_KEY = 'telebot_chat_history_json';
 
 @Component({
@@ -80,16 +91,29 @@ export class App implements OnInit {
     });
 
     this.pending.set(true);
-    const reply = this.generateReply(prompt);
+    try {
+      const response = await firstValueFrom(
+        this.http.post<ChatApiResponse>('/api/chat', {
+          prompt
+        })
+      );
 
-    setTimeout(() => {
+      const reply = response.reply?.trim() || this.generateReply(prompt);
       this.appendMessage({
         role: 'bot',
         text: reply,
         at: new Date().toISOString()
       });
+    } catch {
+      const fallbackReply = this.generateReply(prompt);
+      this.appendMessage({
+        role: 'bot',
+        text: `${fallbackReply}\n\n(Using local fallback. Start AI server with: npm run start:api)`,
+        at: new Date().toISOString()
+      });
+    } finally {
       this.pending.set(false);
-    }, 250);
+    }
   }
 
   protected clearHistory(): void {
@@ -212,6 +236,12 @@ export class App implements OnInit {
       return this.buildRandomAnimalReply();
     }
 
+    const category = this.resolveCategoryQuery(normalized);
+    if (category) {
+      const categoryReply = this.buildCategoryReply(category);
+      if (categoryReply) return categoryReply;
+    }
+
     const animal = this.findAnimalInPrompt(normalized);
     if (animal) {
       return this.formatAnimalDetails(animal);
@@ -287,6 +317,82 @@ export class App implements OnInit {
       'You can add it in public/data/animals.json.',
       `Available examples: ${suggestions}.`
     ].join('\n');
+  }
+
+  private resolveCategoryQuery(prompt: string): AnimalCategory | null {
+    const categories: AnimalCategory[] = [
+      {
+        key: 'snake',
+        aliases: ['snake', 'snakes'],
+        test: (animal) =>
+          animal.commonName.toLowerCase().includes('snake') ||
+          animal.commonName.toLowerCase().includes('cobra') ||
+          animal.commonName.toLowerCase().includes('python') ||
+          animal.commonName.toLowerCase().includes('viper') ||
+          animal.commonName.toLowerCase().includes('mamba') ||
+          animal.commonName.toLowerCase().includes('anaconda') ||
+          animal.scientificName.toLowerCase().includes('serpentes')
+      },
+      {
+        key: 'bird',
+        aliases: ['bird', 'birds'],
+        test: (animal) => animal.classification.toLowerCase() === 'bird'
+      },
+      {
+        key: 'mammal',
+        aliases: ['mammal', 'mammals'],
+        test: (animal) => animal.classification.toLowerCase() === 'mammal'
+      },
+      {
+        key: 'reptile',
+        aliases: ['reptile', 'reptiles'],
+        test: (animal) => animal.classification.toLowerCase() === 'reptile'
+      },
+      {
+        key: 'amphibian',
+        aliases: ['amphibian', 'amphibians', 'frog', 'frogs'],
+        test: (animal) => animal.classification.toLowerCase() === 'amphibian'
+      },
+      {
+        key: 'fish',
+        aliases: ['fish', 'fishes', 'shark', 'sharks'],
+        test: (animal) =>
+          animal.classification.toLowerCase() === 'fish' ||
+          animal.commonName.toLowerCase().includes('shark')
+      },
+      {
+        key: 'insect',
+        aliases: ['insect', 'insects', 'bee', 'bees'],
+        test: (animal) => animal.classification.toLowerCase() === 'insect'
+      }
+    ];
+
+    return categories.find((category) => category.aliases.some((alias) => prompt.includes(alias))) || null;
+  }
+
+  private buildCategoryReply(category: AnimalCategory): string | null {
+    const matches = this.animals.filter((animal) => category.test(animal));
+    if (!matches.length) return null;
+
+    const overview =
+      category.key === 'snake'
+        ? [
+            'Snakes are legless reptiles (suborder Serpentes).',
+            'They are carnivorous and swallow prey whole because their jaws are highly flexible.',
+            'Most species are non-venomous; some use venom for hunting and defense.'
+          ].join('\n')
+        : '';
+
+    const entries = matches
+      .map(
+        (animal) =>
+          `- ${animal.commonName}: ${animal.habitat}; diet: ${animal.diet}; status: ${animal.conservationStatus}`
+      )
+      .join('\n');
+
+    return [overview, '', `${category.key[0].toUpperCase() + category.key.slice(1)} entries in my dataset:`, entries, '', `Ask: "tell me about ${matches[0].commonName.toLowerCase()}".`]
+      .filter(Boolean)
+      .join('\n');
   }
 
   private extractRequestedAnimalName(prompt: string): string | null {

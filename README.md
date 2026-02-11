@@ -1,10 +1,12 @@
-# Angular JSON Chatbot
+# Angular + Qwen Animal Chatbot
 
-This project is a chatbot built with Angular only.
+This project combines:
+- Angular chat UI
+- Local AI API server (`server/ai_server.py`)
+- Qwen model through Hugging Face Router (or Ollama)
+- JSON animal knowledge base for grounded responses
 
-No backend. No database.
-
-For Telegram replies, a local polling runner is included in `bot/telegram-polling-bot.js`.
+For Telegram replies, a local polling runner is included in `bot/telegram_polling_bot.py`.
 
 ## Where data is stored
 
@@ -14,36 +16,56 @@ For Telegram replies, a local polling runner is included in `bot/telegram-pollin
 - Runtime history persistence: browser `localStorage` as JSON
 - Export/import history: JSON file from the UI
 
-## Run
+## Run (Web App + AI)
 
 ```bash
 npm install
-npm start
+pip install -r requirements.txt
+npm run start:full
 ```
 
 Open `http://localhost:4200`.
 
-## Enable Telegram Bot Replies
+This starts:
+- Angular dev server (`4200`)
+- AI API server (`3000`)
 
-1. Add token to `.env`:
+## Hugging Face Router Setup (Recommended)
+
+Set `.env` (or copy from `.env.example`):
 
 ```env
 TELEGRAM_BOT_TOKEN=your-token-from-botfather
+MODEL_PROVIDER=huggingface
+HF_TOKEN=your-huggingface-token
+HF_BASE_URL=https://router.huggingface.co/v1
+HF_MODEL=Qwen/Qwen2.5-7B-Instruct:together
 ```
 
-2. Verify token:
+## Optional Ollama Setup
+
+```env
+MODEL_PROVIDER=ollama
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_MODEL=qwen2.5:3b
+```
+
+## Enable Telegram Bot Replies
+
+1. Verify token:
 
 ```bash
 npm run bot:check
 ```
 
-3. Start Telegram polling bot:
+2. Start Telegram polling bot:
 
 ```bash
 npm run bot
 ```
 
 Then chat with your bot in Telegram (`@wildfactbot`).
+The polling bot uses the same Qwen + JSON grounded reply engine.
 
 ## Customize bot behavior
 

@@ -64,7 +64,8 @@
               "buildTarget": "telebot:build:production"
             },
             "development": {
-              "buildTarget": "telebot:build:development"
+              "buildTarget": "telebot:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
