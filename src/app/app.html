@@ -1,0 +1,77 @@
+<main class="layout">
+  <section class="panel chat">
+    <header class="panel-head">
+      <div>
+        <h1>{{ title() }}</h1>
+        <p class="subtitle">Animal knowledge bot with Telegram-ready responses</p>
+      </div>
+      <span class="status">Live</span>
+    </header>
+
+    <div class="stream">
+      @if (messages().length === 0) {
+        <p class="empty">No messages yet.</p>
+      } @else {
+        @for (message of messages(); track $index) {
+          <article class="bubble" [class.user]="message.role === 'user'" [class.bot]="message.role === 'bot'">
+            <header>
+              <span>{{ message.role === 'bot' ? botName() : 'You' }}</span>
+              <time>{{ message.at | date: 'shortTime' }}</time>
+            </header>
+            <p>{{ message.text }}</p>
+          </article>
+        }
+      }
+    </div>
+
+    <form class="composer" (ngSubmit)="sendMessage()">
+      <textarea name="prompt" [(ngModel)]="prompt" rows="3" placeholder="Try: tell me about axolotl"></textarea>
+      <div class="composer-actions">
+        <p class="hint">Quick prompts: list animals, random animal, tell me about tiger</p>
+        <button type="submit" [disabled]="pending()">{{ pending() ? 'Thinking...' : 'Send Message' }}</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel controls">
+    <h2 class="controls-title">Control Center</h2>
+
+    <div class="control-card">
+      <h3>Telegram Join QR</h3>
+      <p>Enter bot username (without @), then scan from mobile.</p>
+      <input
+        type="text"
+        [(ngModel)]="telegramUsernameInput"
+        (blur)="applyTelegramUsername()"
+        (keyup.enter)="applyTelegramUsername()"
+        placeholder="Example: wildfactbot"
+      />
+
+      @if (hasValidTelegramUsername()) {
+        <div class="qr-wrap">
+          <img [src]="telegramQrUrl()" alt="Telegram bot join QR" width="220" height="220" />
+          <a [href]="telegramJoinLink()" target="_blank" rel="noopener">{{ telegramJoinLink() }}</a>
+        </div>
+      } @else {
+        <p class="note">No username set. Add one to generate QR.</p>
+      }
+    </div>
+
+    <div class="control-card">
+      <h3>JSON Data Tools</h3>
+      <p>Rules: <code>public/data/bot-config.json</code><br />Animals: <code>public/data/animals.json</code></p>
+
+      <div class="buttons">
+        <button type="button" (click)="exportHistory()">Export History JSON</button>
+        <button type="button" (click)="clearHistory()">Clear History</button>
+      </div>
+
+      <label class="import-label" for="importFile">Import History JSON</label>
+      <input id="importFile" type="file" accept=".json,application/json" (change)="importHistory($event)" />
+    </div>
+
+    <p class="note footer-note">
+      Current session is also saved in browser storage as JSON for quick reload persistence.
+    </p>
+  </section>
+</main>

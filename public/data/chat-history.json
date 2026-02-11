@@ -1,0 +1,12 @@
+[
+  {
+    "role": "bot",
+    "text": "Hello. I can provide full animal details from local JSON files.",
+    "at": "2026-02-11T00:00:00.000Z"
+  },
+  {
+    "role": "bot",
+    "text": "Try: list animals, random animal, or tell me about tiger.",
+    "at": "2026-02-11T00:00:01.000Z"
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "botName": "TeleBot",
+  "telegramUsername": "wildfactbot",
+  "greetings": [
+    "Hello. I can give detailed animal profiles from local JSON files.",
+    "Hi. Ask me about any animal in my dataset."
+  ],
+  "fallback": [
+    "I could not find that animal in my dataset.",
+    "I am not sure about that animal yet."
+  ],
+  "intents": [
+    {
+      "contains": ["what can you do", "capabilities", "features"],
+      "responses": [
+        "I provide full animal details such as habitat, diet, lifespan, speed, and conservation status.",
+        "I can list animals, pick a random one, and return full details about specific animals."
+      ]
+    },
+    {
+      "contains": ["help", "how to use", "commands"],
+      "responses": [
+        "Commands: 'list animals', 'random animal', or 'tell me about <animal name>'.",
+        "Ask questions like 'full details of tiger' or 'tell me about dolphin'."
+      ]
+    },
+    {
+      "contains": ["thanks", "thank you"],
+      "responses": [
+        "You are welcome.",
+        "Glad to help."
+      ]
+    }
+  ]
+}
